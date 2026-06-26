@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
 	"log"
+	"strings"
 	"encoding/json"
 	"net/http"
     "sync/atomic"
@@ -44,7 +45,6 @@ func handlerReadiness(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handlerCount(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-    //w.Write([]byte(fmt.Sprintf("Hits: %d", cfg.fileserverHits.Load())))
 	text := fmt.Sprintf(`<html>
   <body>
     <h1>Welcome, Chirpy Admin</h1>
@@ -70,13 +70,14 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 
 func handlerValidChirp(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Body string `json:body"`
+		Body string `json:"body"`
 	}
 	type errorResponse struct {
 		Error string `json:"error"`
 	}
 	type validResponse struct {
-		Valid bool `json:"valid"`
+		Body string `json:"body"`
+		CleanedBody string `json:"cleaned_body"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -84,7 +85,6 @@ func handlerValidChirp(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding parameters: %s", err)
-		//w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -104,10 +104,12 @@ func handlerValidChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := validResponse{
-		Valid: true,
+	new_chirp := unProfane(params.Body)
+	chirp := validResponse{
+		Body : params.Body,
+		CleanedBody : new_chirp,
 	}
-	dat, err := json.Marshal(resp)
+	dat, err := json.Marshal(chirp)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
@@ -116,4 +118,29 @@ func handlerValidChirp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(dat)
+}
+
+
+func unProfane(chirp string) string {
+	split_chirp := strings.Split(chirp, " ")
+	new_chirp := make([]string, len(split_chirp))
+
+	for i := 0; i < len(new_chirp); i++ {
+		if !isProfaneWord(strings.ToLower(split_chirp[i])) {
+			new_chirp[i] = split_chirp[i]
+		} else {
+			new_chirp[i] = "****"
+		}
+	}
+
+	return strings.Join(new_chirp, " ")
+}
+
+func isProfaneWord(s string) bool {
+	switch s {
+	case "kerfuffle", "sharbert", "fornax":
+		return true
+	default:
+		return false
+	}
 }
