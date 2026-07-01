@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gabyrod7/chirpy/internal/database"
 	"github.com/google/uuid"
+	"github.com/gabyrod7/chirpy/internal/database"
 )
 
 type Chirp struct {
