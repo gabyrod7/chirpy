@@ -1,9 +1,11 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"time"
+	"errors"
+	"strings"
+	"net/http"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
@@ -17,7 +19,6 @@ const (
 	TokenTypeAccess TokenType = "chirpy-access"
 )
 
-// HashPassword -
 func HashPassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
@@ -26,7 +27,6 @@ func HashPassword(password string) (string, error) {
 	return hash, nil
 }
 
-// CheckPasswordHash -
 func CheckPasswordHash(password, hash string) (bool, error) {
 	match, err := argon2id.ComparePasswordAndHash(password, hash)
 	if err != nil {
@@ -35,7 +35,6 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return match, nil
 }
 
-// MakeJWT -
 func MakeJWT(
 	userID uuid.UUID,
 	tokenSecret string,
@@ -51,7 +50,6 @@ func MakeJWT(
 	return token.SignedString(signingKey)
 }
 
-// ValidateJWT -
 func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	claimsStruct := jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(
@@ -83,3 +81,17 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return id, nil
 }
 
+func GetBearerToken(headers http.Header) (string, error) {
+	headerAuthorization := headers.Get("Authorization")
+	if headerAuthorization == "" {
+		return "", errors.New("no auth header included in request")
+	}
+
+	authorizationElements := strings.Split(headerAuthorization, " ")
+	if len(authorizationElements) != 2 || authorizationElements[0] != "Bearer" {
+		return "", errors.New("malformed authorization header")
+
+	}
+
+	return authorizationElements[1], nil
+}
