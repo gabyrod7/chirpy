@@ -66,8 +66,8 @@ func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (Us
 }
 
 const revokeRefreshToken = `-- name: RevokeRefreshToken :one
-UPDATE refresh_tokens SET revoked_at = NOW(),
-updated_at = NOW()
+UPDATE refresh_tokens 
+SET revoked_at = NOW(), updated_at = NOW()
 WHERE token = $1
 RETURNING token, created_at, updated_at, user_id, expires_at, revoked_at
 `

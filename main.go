@@ -59,15 +59,17 @@ func main() {
 
     handler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
     mux.Handle("/app/", apiCfg.middlewareMetricsInc(handler))
-	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET    /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET    /api/chirps", apiCfg.handlerGetChirps)
+	mux.HandleFunc("GET    /api/chirps/{chirpID}", apiCfg.handlerGetChirp)
+	mux.HandleFunc("POST   /api/chirps", apiCfg.handlerChirps)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
+	mux.HandleFunc("PUT  /api/users", apiCfg.handlerUsersUpdate)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
-	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirps)
-	mux.HandleFunc("GET /api/chirps", apiCfg.handlerGetChirps)
-	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerGetChirp)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)
-	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerCount)
+	mux.HandleFunc("GET  /admin/metrics", apiCfg.handlerCount)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 
 	srv := &http.Server{
