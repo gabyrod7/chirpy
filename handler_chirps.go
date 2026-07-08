@@ -36,7 +36,6 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err = decoder.Decode(&params)
