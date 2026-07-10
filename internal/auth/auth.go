@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"fmt"
-	"time"
-	"errors"
-	"strings"
-	"net/http"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
@@ -92,15 +92,27 @@ func GetBearerToken(headers http.Header) (string, error) {
 	authorizationElements := strings.Split(headerAuthorization, " ")
 	if len(authorizationElements) != 2 || authorizationElements[0] != "Bearer" {
 		return "", errors.New("malformed authorization header")
-
 	}
 
 	return authorizationElements[1], nil
 }
 
-
 func MakeRefreshToken() string {
 	key := make([]byte, 32)
 	rand.Read(key)
 	return hex.EncodeToString(key)
+}
+
+func GetAPIKey(header http.Header) (string, error) {
+	headerAuthorization := header.Get("Authorization")
+	if headerAuthorization == "" {
+		return "", errors.New("no auth header included in request")
+	}
+
+	authorizationElements := strings.Split(headerAuthorization, " ")
+	if len(authorizationElements) != 2 || authorizationElements[0] != "ApiKey" {
+		return "", errors.New("malformed authorization header")
+	}
+
+	return authorizationElements[1], nil
 }
